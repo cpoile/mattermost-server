@@ -562,3 +562,27 @@ func TestPermanentDeleteUser(t *testing.T) {
 		t.Fatal("GetFileInfo after DeleteUser is nil")
 	}
 }
+
+func TestDeletePasswordRecoveryTokenForUser(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+
+	user := th.CreateUser()
+	token, err := th.App.CreatePasswordRecoveryToken(user.Id)
+	assert.Nil(t, err)
+	token2, err := th.App.CreatePasswordRecoveryToken(user.Id)
+	assert.Nil(t, err)
+
+	tokenFetch, err := th.App.GetPasswordRecoveryToken(token.Token)
+	assert.Nil(t, err)
+	assert.Equal(t, token.Extra, tokenFetch.Extra)
+
+	err = th.App.DeletePasswordRecoveryTokenForUser(user.Id)
+	assert.Nil(t, err)
+
+	_, err = th.App.GetPasswordRecoveryToken(token.Token)
+	assert.NotNil(t, err)
+
+	_, err = th.App.GetPasswordRecoveryToken(token2.Token)
+	assert.NotNil(t, err)
+}

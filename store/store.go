@@ -425,6 +425,7 @@ type TokenStore interface {
 	Save(recovery *model.Token) StoreChannel
 	Delete(token string) StoreChannel
 	GetByToken(token string) StoreChannel
+	GetByTypeAndExtra(tokenType, extra string) StoreChannel
 	Cleanup()
 }
 

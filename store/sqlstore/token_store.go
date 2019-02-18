@@ -68,6 +68,22 @@ func (s SqlTokenStore) GetByToken(tokenString string) store.StoreChannel {
 	})
 }
 
+func (s SqlTokenStore) GetByTypeAndExtra(tokenType, extraString string) store.StoreChannel {
+	return store.Do(func(result *store.StoreResult) {
+		var tokens []*model.Token
+
+		if _, err := s.GetReplica().Select(&tokens, "SELECT * FROM Tokens WHERE Type = :TokenType AND Extra = :Extra", map[string]interface{}{"TokenType": tokenType, "Extra": extraString}); err != nil {
+			if err == sql.ErrNoRows {
+				result.Err = model.NewAppError("SqlTokenStore.GetByExtra", "store.sql_recover.get_by_extra.app_error", nil, err.Error(), http.StatusBadRequest)
+			} else {
+				result.Err = model.NewAppError("SqlTokenStore.GetByExtra", "store.sql_recover.get_by_extra.app_error", nil, err.Error(), http.StatusInternalServerError)
+			}
+		}
+
+		result.Data = tokens
+	})
+}
+
 func (s SqlTokenStore) Cleanup() {
 	mlog.Debug("Cleaning up token store.")
 	deltime := model.GetMillis() - model.MAX_TOKEN_EXIPRY_TIME

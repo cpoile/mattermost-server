@@ -1013,6 +1013,12 @@ func (a *App) UpdateUser(user *model.User, sendNotifications bool) (*model.User,
 	}
 	rusers := result.Data.([2]*model.User)
 
+	if rusers[0].Email != rusers[1].Email {
+		if err := a.DeletePasswordRecoveryTokenForUser(user.Id); err != nil {
+			mlog.Error(err.Error())
+		}
+	}
+
 	if sendNotifications {
 		if rusers[0].Email != rusers[1].Email {
 			a.Srv.Go(func() {
@@ -1205,6 +1211,20 @@ func (a *App) GetPasswordRecoveryToken(token string) (*model.Token, *model.AppEr
 		return nil, model.NewAppError("GetPasswordRecoveryToken", "api.user.reset_password.broken_token.app_error", nil, "", http.StatusBadRequest)
 	}
 	return rtoken, nil
+}
+
+func (a *App) DeletePasswordRecoveryTokenForUser(userId string) *model.AppError {
+	result := <-a.Srv.Store.Token().GetByTypeAndExtra(TOKEN_TYPE_PASSWORD_RECOVERY, userId)
+	if result.Err != nil {
+		return model.NewAppError("DeletePasswordRecoveryTokenForUser", "api.user.get_password_recovery_token.app_error", nil, result.Err.Error(), http.StatusBadRequest)
+	}
+	rtoken := result.Data.([]*model.Token)
+
+	for _, token := range rtoken {
+		<-a.Srv.Store.Token().Delete(token.Token)
+	}
+
+	return nil
 }
 
 func (a *App) DeleteToken(token *model.Token) *model.AppError {

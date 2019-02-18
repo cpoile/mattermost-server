@@ -50,6 +50,22 @@ func (_m *TokenStore) GetByToken(token string) store.StoreChannel {
 	return r0
 }
 
+// GetByTypeAndExtra provides a mock function with given fields: tokenType, extra
+func (_m *TokenStore) GetByTypeAndExtra(tokenType string, extra string) store.StoreChannel {
+	ret := _m.Called(tokenType, extra)
+
+	var r0 store.StoreChannel
+	if rf, ok := ret.Get(0).(func(string, string) store.StoreChannel); ok {
+		r0 = rf(tokenType, extra)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.StoreChannel)
+		}
+	}
+
+	return r0
+}
+
 // Save provides a mock function with given fields: recovery
 func (_m *TokenStore) Save(recovery *model.Token) store.StoreChannel {
 	ret := _m.Called(recovery)
